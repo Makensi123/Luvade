@@ -1,0 +1,45 @@
+CREATE DATABASE prueba;
+
+CREATE SCHEMA prueba;
+
+CREATE TABLE prueba.trabajador (
+  tra_ide SERIAL PRIMARY KEY,
+  tra_cod INTEGER DEFAULT 0,
+  tra_nom VARCHAR(200) DEFAULT '',
+  tra_pat VARCHAR(200) DEFAULT '',
+  tra_mat VARCHAR(200) DEFAULT '',
+  est_ado INTEGER DEFAULT 1
+);
+
+CREATE TABLE prueba.venta (
+  ven_ide SERIAL PRIMARY KEY,
+  ven_ser VARCHAR(5) DEFAULT '',
+  ven_num VARCHAR(100) DEFAULT '',
+  ven_cli TEXT DEFAULT '',
+  ven_mon NUMERIC(14,2)
+);
+
+CREATE TABLE prueba.venta_detalle (
+  v_d_ide SERIAL PRIMARY KEY,
+  ven_ide INTEGER,
+  v_d_pro TEXT DEFAULT '',
+  v_d_uni NUMERIC(14,2) DEFAULT 0.00,
+  v_d_can NUMERIC(14,2) DEFAULT 0.00,
+  v_d_tot NUMERIC(14,2) DEFAULT 0.00,
+  est_ado INTEGER DEFAULT 1
+);
+
+TRIGGER PARA VENTA_DETALLE
+CREATE OR REPLACE FUNCTION actualiza_total()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.v_d_tot := NEW.v_d_uni * NEW.v_d_can;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trig_actualiza_total
+BEFORE INSERT OR UPDATE ON prueba.venta_detalle
+FOR EACH ROW
+EXECUTE FUNCTION actualiza_total();
+
