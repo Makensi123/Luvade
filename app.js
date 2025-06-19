@@ -7,10 +7,7 @@ Ext.onReady(function () {
             type: 'ajax',
             url: 'php/trabajador.php',
             extraParams: { action: 'lista' },
-            reader: {
-                type: 'json',
-                root: 'data'
-            }
+            reader: { type: 'json', root: 'data' }
         },
         autoLoad: true
     });
@@ -20,11 +17,7 @@ Ext.onReady(function () {
 
         var form = Ext.create('Ext.form.Panel', {
             bodyPadding: 10,
-            defaults: {
-                xtype: 'textfield',
-                anchor: '100%',
-                allowBlank: false
-            },
+            defaults: { xtype: 'textfield', anchor: '100%', allowBlank: false },
             items: [
                 { name: 'tra_cod', fieldLabel: 'Codigo' },
                 { name: 'tra_nom', fieldLabel: 'Nombre' },
@@ -38,11 +31,10 @@ Ext.onReady(function () {
                     text: 'Guardar',
                     formBind: true,
                     handler: function () {
-                        var formValues = form.getValues();
                         Ext.Ajax.request({
                             url: 'php/trabajador.php',
                             method: 'POST',
-                            params: formValues,
+                            params: form.getValues(),
                             success: function () {
                                 storeTrabajadores.load();
                                 form.up('window').close();
@@ -92,11 +84,8 @@ Ext.onReady(function () {
                     text: 'Modificar',
                     handler: function () {
                         var record = gridTrabajadores.getSelectionModel().getSelection()[0];
-                        if (record) {
-                            mostrarFormularioTrabajador(record);
-                        } else {
-                            Ext.Msg.alert('Atencion', 'Seleccione un trabajador.');
-                        }
+                        if (record) mostrarFormularioTrabajador(record);
+                        else Ext.Msg.alert('Atencion', 'Seleccione un trabajador.');
                     }
                 },
                 {
@@ -109,19 +98,14 @@ Ext.onReady(function () {
                                     Ext.Ajax.request({
                                         url: 'php/trabajador.php',
                                         method: 'POST',
-                                        params: {
-                                            action: 'eliminar',
-                                            tra_ide: record.get('tra_ide')
-                                        },
+                                        params: { action: 'eliminar', tra_ide: record.get('tra_ide') },
                                         success: function () {
                                             storeTrabajadores.load();
                                         }
                                     });
                                 }
                             });
-                        } else {
-                            Ext.Msg.alert('Atencion', 'Seleccione un trabajador.');
-                        }
+                        } else Ext.Msg.alert('Atencion', 'Seleccione un trabajador.');
                     }
                 }
             ]
@@ -166,41 +150,6 @@ Ext.onReady(function () {
         }
     });
 
-    var gridCabecera = Ext.create('Ext.grid.Panel', {
-        store: storeCabecera,
-        flex: 1,
-        title: 'Ventas',
-        columns: [
-            { text: 'ID', dataIndex: 'ven_ide', width: 50 },
-            { text: 'Serie', dataIndex: 'ven_ser', width: 80 },
-            { text: 'Numero', dataIndex: 'ven_num', width: 100 },
-            { text: 'Cliente', dataIndex: 'ven_cli', flex: 1 },
-            { text: 'Monto', dataIndex: 'ven_mon', width: 100 }
-        ],
-        listeners: {
-            select: function (_, record) {
-                storeDetalleVisual.load({
-                    url: 'php/venta.php',
-                    params: { action: 'read_detalle', ven_ide: record.get('ven_ide') }
-                });
-            }
-        }
-    });
-
-    var gridDetalle = Ext.create('Ext.grid.Panel', {
-        store: storeDetalleVisual,
-        flex: 1,
-        title: 'Detalle de la Venta',
-        columns: [
-            { text: 'ID', dataIndex: 'v_d_ide', width: 50 },
-            { text: 'Producto', dataIndex: 'v_d_pro', flex: 1 },
-            { text: 'Precio Unitario', dataIndex: 'v_d_uni', width: 120 },
-            { text: 'Cantidad', dataIndex: 'v_d_can', width: 120 },
-            { text: 'Total', dataIndex: 'v_d_tot', width: 120 },
-            { text: 'Estado', dataIndex: 'est_ado', width: 80 }
-        ]
-    });
-
     function abrirFormularioVenta(record) {
         var isEdit = !!record;
 
@@ -241,9 +190,7 @@ Ext.onReady(function () {
                     text: 'Eliminar Detalle',
                     handler: function () {
                         var sel = gridDetalleEdicion.getSelectionModel().getSelection();
-                        if (sel.length) {
-                            storeDetalleEdicion.remove(sel);
-                        }
+                        if (sel.length) storeDetalleEdicion.remove(sel);
                     }
                 }
             ]
@@ -296,7 +243,6 @@ Ext.onReady(function () {
                                             if (done === total) {
                                                 storeCabecera.load();
                                                 storeDetalleVisual.load({
-                                                    url: 'php/venta.php',
                                                     params: { action: 'read_detalle', ven_ide: ven_ide }
                                                 });
                                                 win.close();
@@ -308,24 +254,63 @@ Ext.onReady(function () {
                         });
                     }
                 },
-                { text: 'Cancelar', handler: function () { win.close(); } }
+                {
+                    text: 'Cancelar',
+                    handler: function () {
+                        win.close();
+                    }
+                }
             ]
         });
 
         if (isEdit) {
             form.getForm().setValues(record.data);
             storeDetalleEdicion.load({
-                url: 'php/venta.php',
                 params: { action: 'read_detalle', ven_ide: record.get('ven_ide') }
             });
         } else {
             storeDetalleEdicion.removeAll();
             storeDetalleEdicion.insert(0, { v_d_ide: 0, ven_ide: 0, v_d_pro: '', v_d_uni: 0, v_d_can: 0, v_d_tot: 0, est_ado: 1 });
         }
+
         win.show();
     }
 
     function abrirVentanaGestionVentas() {
+        var gridCabecera = Ext.create('Ext.grid.Panel', {
+            store: storeCabecera,
+            flex: 1,
+            title: 'Ventas',
+            columns: [
+                { text: 'ID', dataIndex: 'ven_ide', width: 50 },
+                { text: 'Serie', dataIndex: 'ven_ser', width: 80 },
+                { text: 'Numero', dataIndex: 'ven_num', width: 100 },
+                { text: 'Cliente', dataIndex: 'ven_cli', flex: 1 },
+                { text: 'Monto', dataIndex: 'ven_mon', width: 100 }
+            ],
+            listeners: {
+                select: function (_, record) {
+                    storeDetalleVisual.load({
+                        params: { action: 'read_detalle', ven_ide: record.get('ven_ide') }
+                    });
+                }
+            }
+        });
+
+        var gridDetalle = Ext.create('Ext.grid.Panel', {
+            store: storeDetalleVisual,
+            flex: 1,
+            title: 'Detalle de la Venta',
+            columns: [
+                { text: 'ID', dataIndex: 'v_d_ide', width: 50 },
+                { text: 'Producto', dataIndex: 'v_d_pro', flex: 1 },
+                { text: 'Precio Unitario', dataIndex: 'v_d_uni', width: 120 },
+                { text: 'Cantidad', dataIndex: 'v_d_can', width: 120 },
+                { text: 'Total', dataIndex: 'v_d_tot', width: 120 },
+                { text: 'Estado', dataIndex: 'est_ado', width: 80 }
+            ]
+        });
+
         Ext.create('Ext.window.Window', {
             title: 'Gestion de Ventas',
             width: 1000,
@@ -376,18 +361,8 @@ Ext.onReady(function () {
         layout: 'vbox',
         defaults: { margin: '10 0' },
         items: [
-            {
-                xtype: 'button',
-                text: 'Gestionar Trabajadores',
-                width: 260,
-                handler: abrirTrabajadorWindow
-            },
-            {
-                xtype: 'button',
-                text: 'Gestionar Ventas',
-                width: 260,
-                handler: abrirVentanaGestionVentas
-            }
+            { xtype: 'button', text: 'Gestionar Trabajadores', width: 260, handler: abrirTrabajadorWindow },
+            { xtype: 'button', text: 'Gestionar Ventas', width: 260, handler: abrirVentanaGestionVentas }
         ]
     });
 });
